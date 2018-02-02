@@ -2,7 +2,7 @@
 
 ## Install
 
-`pip install RocketChatBot`
+`pip install RocketChatAPIBot`
 
 ## Usage
 
