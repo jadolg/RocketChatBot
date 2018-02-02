@@ -3,9 +3,9 @@
 from setuptools import setup
 
 setup(
-    name='RocketChatBot',
+    name='RocketChatAPIBot',
     version='0.1',
-    packages=['RocketChatBot', ],
+    packages=['.', ],
     url='https://github.com/jadolg/RocketChatBot',
     license='MIT',
     author='Jorge Alberto Díaz Orozco',
