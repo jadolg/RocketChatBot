@@ -48,7 +48,7 @@ class RocketChatBot(object):
             if not self.handle_auto_answer(message, self.direct_answers, channel_id):
                 self.send_message('@' + user + ' :' + choice(self.unknow_command), channel_id)
         else:
-            self.send_message('me han llamado?', channel_id)
+            self.send_message('Here I am', channel_id)
 
     def handle_auto_answer(self, message, answers, channel_id):
         for kind in answers:
