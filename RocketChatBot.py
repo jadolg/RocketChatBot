@@ -135,4 +135,4 @@ class RocketChatBot(object):
             for im in self.api.im_list().json().get('ims'):
                 Thread(target=self.process_im, args=(im.get('_id'),)).start()
 
-            sleep(0.1)
+            sleep(1)
