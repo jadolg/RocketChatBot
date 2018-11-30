@@ -1,1 +1,1 @@
-rocketchat-API==0.6.3
+rocketchat-API==0.6.24
