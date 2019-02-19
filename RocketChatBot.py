@@ -9,7 +9,7 @@ from rocketchat_API.rocketchat import RocketChat
 class RocketChatBot(object):
     def __init__(self, botname, passwd, server):
         self.botname = botname
-        self.api = RocketChat(user=botname,password=passwd, server_url=server)
+        self.api = RocketChat(user=botname, password=passwd, server_url=server)
         self.commands = [(['echo', ], self.echo)]
         self.auto_answers = []
         self.direct_answers = []
