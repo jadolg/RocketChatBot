@@ -1,5 +1,8 @@
 language: python
 
+script:
+  - ls
+
 deploy:
   provider: pypi
   user: jadolg
