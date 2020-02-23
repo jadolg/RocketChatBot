@@ -12,6 +12,7 @@ setup(
     author_email='diazorozcoj@gmail.com',
     description='REST API based bot for Rocket.Chat',
     long_description=open("README.md", "r").read(),
+    long_description_content_type="text/markdown",
     install_requires=(
         'rocketchat_API',
     )
