@@ -88,6 +88,9 @@ class RocketChatBot(object):
 
     def process_messages(self, messages, channel_id):
         try:
+            if "success" in messages:
+                if messages['success'] == False:
+                    raise RuntimeError(messages['error'])
             if len(messages['messages']) > 0:
                 self.lastts[channel_id] = messages['messages'][0]['ts']
             self.handle_messages(messages, channel_id)
