@@ -36,10 +36,12 @@ class RocketChatBot(object):
         self.direct_answers.append((triggers, answers))
         
     def handle_command_character_message(self, message, channel_id):
-        command, msg = message['msg'].split(" ",1)
-        command = command.lstrip(self.command_character).lower()
+        msg = message['msg'].lstrip(self.command_character)
+
+        command = msg.split()[0].lower()
         arguments = " ".join(msg.split()[1:])
         user = message['u']['username']
+
         for cmd_list in self.commands:
                 if command.lower() in cmd_list[0]:
                     cmd_list[1](arguments, user, channel_id)
