@@ -7,7 +7,7 @@ from rocketchat_API.rocketchat import RocketChat
 
 
 class RocketChatBot(object):
-    def __init__(self, botname, passwd, server):
+    def __init__(self, botname, passwd, server, command_character=None):
         self.botname = botname
         self.api = RocketChat(user=botname, password=passwd, server_url=server)
         self.commands = [(['echo', ], self.echo)]
@@ -15,6 +15,7 @@ class RocketChatBot(object):
         self.direct_answers = []
         self.unknow_command = ['command not found', ]
         self.lastts = {}
+        self.command_character = command_character
 
     def echo(self, msg, user, channel_id):
         self.send_message('@' + user + ' : ' + msg, channel_id)
@@ -33,6 +34,19 @@ class RocketChatBot(object):
 
     def add_direct_answer(self, triggers, answers):
         self.direct_answers.append((triggers, answers))
+        
+    def handle_command_character_message(self, message, channel_id):
+        command, msg = message['msg'].split(" ",1)
+        command = command.lstrip(self.command_character).lower()
+        arguments = " ".join(msg.split()[1:])
+        user = message['u']['username']
+        for cmd_list in self.commands:
+                if command.lower() in cmd_list[0]:
+                    cmd_list[1](arguments, user, channel_id)
+                    return
+                
+        if not self.handle_auto_answer(message, self.direct_answers, channel_id):
+                self.send_message('@' + user + ' :' + choice(self.unknow_command), channel_id)
 
     def handle_direct_message(self, message, channel_id):
         msg = message['msg'].lstrip('@' + self.botname).strip()
@@ -66,6 +80,8 @@ class RocketChatBot(object):
                     continue
                 if message['msg'].startswith('@' + self.botname):
                     Thread(target=self.handle_direct_message, args=(message, channel_id)).start()
+                elif self.command_character is not None and message['msg'].startswith(self.command_character):
+                    Thread(target=self.handle_command_character_message, args=(message, channel_id)).start()
                 elif 'mentions' not in message or message.get('mentions') == []:
                     Thread(target=self.handle_auto_answer, args=(message, self.auto_answers, channel_id)).start()
 
