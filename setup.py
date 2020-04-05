@@ -4,7 +4,7 @@ from setuptools import setup
 
 setup(
     name='RocketChatAPIBot',
-    version='0.1.3',
+    version='0.1.4',
     packages=['.', ],
     url='https://github.com/jadolg/RocketChatBot',
     license='MIT',
