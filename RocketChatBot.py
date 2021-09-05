@@ -153,7 +153,14 @@ class RocketChatBot(object):
                               oldest=self.lastts[channel_id]).json(),
                               channel_id)
 
-    def run(self):
+    def run(self, update_interval=1):
+        self.prepare_run()
+
+        while 1:
+            self.single_run()
+            sleep(update_interval)
+
+    def prepare_run(self):
         for channel in self.api.channels_list_joined().json().get('channels'):
             self.load_channel_ts(channel.get('_id'))
 
@@ -163,17 +170,15 @@ class RocketChatBot(object):
         for im in self.api.im_list().json().get('ims'):
             self.load_im_ts(im.get('_id'))
 
-        while 1:
-            for channel in \
-                    self.api.channels_list_joined().json().get('channels'):
-                Thread(target=self.process_channel,
-                       args=(channel.get('_id'),)).start()
+    def single_run(self):
+        for channel in \
+                self.api.channels_list_joined().json().get('channels'):
+            Thread(target=self.process_channel,
+                   args=(channel.get('_id'),)).start()
 
-            for group in self.api.groups_list().json().get('groups'):
-                Thread(target=self.process_group,
-                       args=(group.get('_id'),)).start()
+        for group in self.api.groups_list().json().get('groups'):
+            Thread(target=self.process_group,
+                   args=(group.get('_id'),)).start()
 
-            for im in self.api.im_list().json().get('ims'):
-                Thread(target=self.process_im, args=(im.get('_id'),)).start()
-
-            sleep(1)
+        for im in self.api.im_list().json().get('ims'):
+            Thread(target=self.process_im, args=(im.get('_id'),)).start()
