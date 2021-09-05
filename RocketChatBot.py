@@ -34,7 +34,7 @@ class RocketChatBot(object):
 
     def add_direct_answer(self, triggers, answers):
         self.direct_answers.append((triggers, answers))
-        
+
     def handle_command_character_message(self, message, channel_id):
         msg = message['msg'].lstrip(self.command_character)
 
@@ -43,12 +43,14 @@ class RocketChatBot(object):
         user = message['u']['username']
 
         for cmd_list in self.commands:
-                if command.lower() in cmd_list[0]:
-                    cmd_list[1](arguments, user, channel_id)
-                    return
-                
-        if not self.handle_auto_answer(message, self.direct_answers, channel_id):
-                self.send_message('@' + user + ' :' + choice(self.unknow_command), channel_id)
+            if command.lower() in cmd_list[0]:
+                cmd_list[1](arguments, user, channel_id)
+                return
+
+        if not self.handle_auto_answer(message, self.direct_answers,
+                                       channel_id):
+            self.send_message('@' + user + ' :'
+                              + choice(self.unknow_command), channel_id)
 
     def handle_direct_message(self, message, channel_id):
         msg = message['msg'].lstrip('@' + self.botname).strip()
@@ -61,8 +63,10 @@ class RocketChatBot(object):
                     cmd_list[1](arguments, user, channel_id)
                     return
 
-            if not self.handle_auto_answer(message, self.direct_answers, channel_id):
-                self.send_message('@' + user + ' :' + choice(self.unknow_command), channel_id)
+            if not self.handle_auto_answer(message, self.direct_answers,
+                                           channel_id):
+                self.send_message('@' + user + ' :'
+                                  + choice(self.unknow_command), channel_id)
         else:
             self.send_message('Here I am', channel_id)
 
@@ -70,7 +74,9 @@ class RocketChatBot(object):
         for kind in answers:
             for k in kind[0]:
                 if k in message['msg'].lower():
-                    self.send_message(choice(kind[1]) + ' @' + message['u']['username'], channel_id)
+                    self.send_message(choice(kind[1])
+                                      + ' @' + message['u']['username'],
+                                      channel_id)
                     return True
         return False
 
@@ -81,11 +87,16 @@ class RocketChatBot(object):
                 if message['u']['username'] == 'rocket.cat':
                     continue
                 if message['msg'].startswith('@' + self.botname):
-                    Thread(target=self.handle_direct_message, args=(message, channel_id)).start()
-                elif self.command_character is not None and message['msg'].startswith(self.command_character):
-                    Thread(target=self.handle_command_character_message, args=(message, channel_id)).start()
-                elif 'mentions' not in message or message.get('mentions') == []:
-                    Thread(target=self.handle_auto_answer, args=(message, self.auto_answers, channel_id)).start()
+                    Thread(target=self.handle_direct_message,
+                           args=(message, channel_id)).start()
+                elif self.command_character is not None and \
+                        message['msg'].startswith(self.command_character):
+                    Thread(target=self.handle_command_character_message,
+                           args=(message, channel_id)).start()
+                elif message.get('mentions', []) == []:
+                    Thread(target=self.handle_auto_answer,
+                           args=(message, self.auto_answers,
+                                 channel_id)).start()
 
     def load_ts(self, channel_id, messages):
         if len(messages) > 0:
@@ -94,20 +105,23 @@ class RocketChatBot(object):
             self.lastts[channel_id] = ''
 
     def load_channel_ts(self, channel_id):
-        self.load_ts(channel_id, self.api.channels_history(channel_id).json()['messages'])
+        self.load_ts(channel_id,
+                     self.api.channels_history(channel_id).json()['messages'])
 
     def load_group_ts(self, channel_id):
-        self.load_ts(channel_id, self.api.groups_history(channel_id).json()['messages'])
+        self.load_ts(channel_id,
+                     self.api.groups_history(channel_id).json()['messages'])
 
     def load_im_ts(self, channel_id):
         response = self.api.im_history(channel_id).json()
         if response.get('success'):
-            self.load_ts(channel_id, self.api.im_history(channel_id).json()['messages'])
+            self.load_ts(channel_id,
+                         self.api.im_history(channel_id).json()['messages'])
 
     def process_messages(self, messages, channel_id):
         try:
             if "success" in messages:
-                if messages['success'] == False:
+                if messages['success'] is False:
                     raise RuntimeError(messages['error'])
             if len(messages['messages']) > 0:
                 self.lastts[channel_id] = messages['messages'][0]['ts']
@@ -119,24 +133,34 @@ class RocketChatBot(object):
         if channel_id not in self.lastts:
             self.lastts[channel_id] = ''
 
-        self.process_messages(self.api.channels_history(channel_id, oldest=self.lastts[channel_id]).json(),
+        self.process_messages(self.api.channels_history(channel_id,
+                              oldest=self.lastts[channel_id]).json(),
                               channel_id)
 
     def process_group(self, channel_id):
         if channel_id not in self.lastts:
             self.lastts[channel_id] = ''
 
-        self.process_messages(self.api.groups_history(channel_id, oldest=self.lastts[channel_id]).json(),
+        self.process_messages(self.api.groups_history(channel_id,
+                              oldest=self.lastts[channel_id]).json(),
                               channel_id)
 
     def process_im(self, channel_id):
         if channel_id not in self.lastts:
             self.lastts[channel_id] = ''
 
-        self.process_messages(self.api.im_history(channel_id, oldest=self.lastts[channel_id]).json(),
+        self.process_messages(self.api.im_history(channel_id,
+                              oldest=self.lastts[channel_id]).json(),
                               channel_id)
 
-    def run(self):
+    def run(self, update_interval=1):
+        self.prepare_run()
+
+        while 1:
+            self.single_run()
+            sleep(update_interval)
+
+    def prepare_run(self):
         for channel in self.api.channels_list_joined().json().get('channels'):
             self.load_channel_ts(channel.get('_id'))
 
@@ -146,14 +170,15 @@ class RocketChatBot(object):
         for im in self.api.im_list().json().get('ims'):
             self.load_im_ts(im.get('_id'))
 
-        while 1:
-            for channel in self.api.channels_list_joined().json().get('channels'):
-                Thread(target=self.process_channel, args=(channel.get('_id'),)).start()
+    def single_run(self):
+        for channel in \
+                self.api.channels_list_joined().json().get('channels'):
+            Thread(target=self.process_channel,
+                   args=(channel.get('_id'),)).start()
 
-            for group in self.api.groups_list().json().get('groups'):
-                Thread(target=self.process_group, args=(group.get('_id'),)).start()
+        for group in self.api.groups_list().json().get('groups'):
+            Thread(target=self.process_group,
+                   args=(group.get('_id'),)).start()
 
-            for im in self.api.im_list().json().get('ims'):
-                Thread(target=self.process_im, args=(im.get('_id'),)).start()
-
-            sleep(1)
+        for im in self.api.im_list().json().get('ims'):
+            Thread(target=self.process_im, args=(im.get('_id'),)).start()
